@@ -14,17 +14,17 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  // Only allow POST requests
+  // Only allow GET requests
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
-    const registrationData: RegistrationData = req.body
+    const registrationData: RegistrationData = req.query as any
 
     // Validate required fields
     const requiredFields = ['fullName', 'guardianName', 'classGrade', 'language', 'location', 'emailAddress', 'password']
-    const missingFields = requiredFields.filter(field => !registrationData[field as keyof RegistrationData])
+    const missingFields = requiredFields.filter(field => !registrationData[field as keyof RegistrationData]?.trim?.())
     
     if (missingFields.length > 0) {
       return res.status(400).json({ 
