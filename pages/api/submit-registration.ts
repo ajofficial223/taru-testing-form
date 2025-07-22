@@ -34,12 +34,6 @@ export default async function handler(
       })
     }
 
-    // Log the data being sent (remove sensitive info for production)
-    console.log('Sending registration data:', {
-      ...registrationData,
-      password: '[REDACTED]' // Don't log the actual password
-    })
-
     // Make request to the external webhook
     const webhookResponse = await axios.post(
       'https://aviadigitalmind.app.n8n.cloud/webhook/AI-BUDDY-MAIN',
@@ -47,16 +41,11 @@ export default async function handler(
       {
         headers: {
           'Content-Type': 'application/json',
+          'grgregs46': '22'
         },
         timeout: 15000, // 15 second timeout
       }
     )
-
-    console.log('Webhook response:', {
-      status: webhookResponse.status,
-      statusText: webhookResponse.statusText,
-      data: webhookResponse.data
-    })
 
     // Return success response
     res.status(200).json({
@@ -69,14 +58,6 @@ export default async function handler(
     console.error('Registration API Error:', error)
 
     if (axios.isAxiosError(error)) {
-      console.error('Axios Error Details:', {
-        code: error.code,
-        message: error.message,
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data,
-        url: error.config?.url
-      })
 
       if (error.code === 'ECONNABORTED') {
         return res.status(408).json({ 
@@ -103,11 +84,10 @@ export default async function handler(
           error: `Registration failed: ${error.message}. Please try again.` 
         })
       }
-    } else {
-      console.error('Non-Axios Error:', error)
-      return res.status(500).json({ 
-        error: 'Internal server error. Please try again.' 
-      })
-    }
+          } else {
+        return res.status(500).json({ 
+          error: 'Internal server error. Please try again.' 
+        })
+      }
   }
 } 
