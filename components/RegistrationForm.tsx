@@ -121,7 +121,8 @@ export default function RegistrationForm() {
       // Prepare data for webhook (excluding confirmPassword)
       const { confirmPassword, ...submitData } = formData
       
-      const response = await axios.post('/api/submit-registration', submitData, {
+      // Temporarily use test endpoint - change back to '/api/submit-registration' after testing
+      const response = await axios.post('/api/test-simple', submitData, {
         headers: {
           'Content-Type': 'application/json',
         },
