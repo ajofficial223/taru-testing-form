@@ -34,6 +34,12 @@ export default async function handler(
       })
     }
 
+    // Log the data being sent (remove sensitive info for production)
+    console.log('Sending registration data:', {
+      ...registrationData,
+      password: '[REDACTED]' // Don't log the actual password
+    })
+
     // Make request to the external webhook
     const webhookResponse = await axios.post(
       'https://aviadigitalmind.app.n8n.cloud/webhook/AI-BUDDY-MAIN',
@@ -46,6 +52,12 @@ export default async function handler(
       }
     )
 
+    console.log('Webhook response:', {
+      status: webhookResponse.status,
+      statusText: webhookResponse.statusText,
+      data: webhookResponse.data
+    })
+
     // Return success response
     res.status(200).json({
       success: true,
@@ -57,13 +69,30 @@ export default async function handler(
     console.error('Registration API Error:', error)
 
     if (axios.isAxiosError(error)) {
+      console.error('Axios Error Details:', {
+        code: error.code,
+        message: error.message,
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        data: error.response?.data,
+        url: error.config?.url
+      })
+
       if (error.code === 'ECONNABORTED') {
         return res.status(408).json({ 
           error: 'Request timeout. Please try again.' 
         })
+      } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+        return res.status(503).json({ 
+          error: 'Unable to connect to registration service. Please try again later.' 
+        })
       } else if (error.response?.status === 400) {
         return res.status(400).json({ 
           error: 'Invalid data submitted. Please check your information.' 
+        })
+      } else if (error.response?.status === 404) {
+        return res.status(502).json({ 
+          error: 'Registration service not found. Please contact support.' 
         })
       } else if (error.response?.status && error.response.status >= 500) {
         return res.status(502).json({ 
@@ -71,10 +100,11 @@ export default async function handler(
         })
       } else {
         return res.status(500).json({ 
-          error: 'Registration failed. Please try again.' 
+          error: `Registration failed: ${error.message}. Please try again.` 
         })
       }
     } else {
+      console.error('Non-Axios Error:', error)
       return res.status(500).json({ 
         error: 'Internal server error. Please try again.' 
       })
