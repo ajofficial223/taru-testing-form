@@ -16,7 +16,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   // Only allow POST requests
-  if (req.method !== 'POST') {
+  if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' })
   }
 
@@ -35,15 +35,14 @@ export default async function handler(
     }
 
     // Make request to the external webhook
-    const webhookResponse = await axios.post(
+    const webhookResponse = await axios.get(
       'https://aviadigitalmind.app.n8n.cloud/webhook/AI-BUDDY-MAIN',
-      registrationData,
       {
+        params: registrationData,
         headers: {
-          'Content-Type': 'application/json',
           'grgregs46': '22'
         },
-        timeout: 15000, // 15 second timeout
+        timeout: 15000
       }
     )
 
