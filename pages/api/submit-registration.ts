@@ -1,5 +1,4 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
-import axios from 'axios'
 
 interface RegistrationData {
   fullName: string
@@ -35,46 +34,41 @@ export default async function handler(
     }
 
     // Make request to the external webhook
-    const webhookResponse = await axios.get(
-      'https://aviadigitalmind.app.n8n.cloud/webhook/AI-BUDDY-MAIN',
-      {
-        params: registrationData,
-        headers: {
-          'grgregs46': '22'
-        },
-        timeout: 15000
-      }
-    )
+    const params = new URLSearchParams(registrationData as unknown as Record<string, string>).toString()
+    const webhookResponse = await fetch(`https://aviadigitalmind.app.n8n.cloud/webhook/AI-BUDDY-MAIN?${params}`, {
+      method: "GET"
+    })
+
+    if (!webhookResponse.ok) {
+      throw new Error(`HTTP error! status: ${webhookResponse.status}`)
+    }
+
+    const responseData = await webhookResponse.text()
 
     // Return success response
     res.status(200).json({
       success: true,
       message: 'Registration submitted successfully',
-      data: webhookResponse.data
+      data: responseData
     })
 
   } catch (error) {
     console.error('Registration API Error:', error)
 
-    if (axios.isAxiosError(error)) {
-
-      if (error.code === 'ECONNABORTED') {
+    if (error instanceof Error) {
+      if (error.message.includes('timeout')) {
         return res.status(408).json({ 
           error: 'Request timeout. Please try again.' 
         })
-      } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
-        return res.status(503).json({ 
-          error: 'Unable to connect to registration service. Please try again later.' 
-        })
-      } else if (error.response?.status === 400) {
+      } else if (error.message.includes('status: 400')) {
         return res.status(400).json({ 
           error: 'Invalid data submitted. Please check your information.' 
         })
-      } else if (error.response?.status === 404) {
+      } else if (error.message.includes('status: 404')) {
         return res.status(502).json({ 
           error: 'Registration service not found. Please contact support.' 
         })
-      } else if (error.response?.status && error.response.status >= 500) {
+      } else if (error.message.includes('status: 5')) {
         return res.status(502).json({ 
           error: 'External server error. Please try again later.' 
         })
@@ -83,10 +77,10 @@ export default async function handler(
           error: `Registration failed: ${error.message}. Please try again.` 
         })
       }
-          } else {
-        return res.status(500).json({ 
-          error: 'Internal server error. Please try again.' 
-        })
-      }
+    } else {
+      return res.status(500).json({ 
+        error: 'Internal server error. Please try again.' 
+      })
+    }
   }
 } 
