@@ -151,7 +151,7 @@ export default function RegistrationForm() {
           setSubmitMessage('Request timeout. Please try again.')
         } else if (error.response?.status === 400) {
           setSubmitMessage('Invalid data submitted. Please check your information.')
-        } else if (error.response?.status >= 500) {
+        } else if (error.response?.status && error.response.status >= 500) {
           setSubmitMessage('Server error. Please try again later.')
         } else {
           setSubmitMessage('Registration failed. Please try again.')
