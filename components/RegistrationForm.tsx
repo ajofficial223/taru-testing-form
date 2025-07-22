@@ -121,11 +121,11 @@ export default function RegistrationForm() {
       // Prepare data for webhook (excluding confirmPassword)
       const { confirmPassword, ...submitData } = formData
       
-      const response = await axios.post('https://aviadigitalmind.app.n8n.cloud/webhook/AI-BUDDY-MAIN', submitData, {
+      const response = await axios.post('/api/submit-registration', submitData, {
         headers: {
           'Content-Type': 'application/json',
         },
-        timeout: 10000, // 10 second timeout
+        timeout: 15000, // 15 second timeout
       })
 
       setSubmitStatus('success')
@@ -149,6 +149,9 @@ export default function RegistrationForm() {
       if (axios.isAxiosError(error)) {
         if (error.code === 'ECONNABORTED') {
           setSubmitMessage('Request timeout. Please try again.')
+        } else if (error.response?.data?.error) {
+          // Use the error message from our API
+          setSubmitMessage(error.response.data.error)
         } else if (error.response?.status === 400) {
           setSubmitMessage('Invalid data submitted. Please check your information.')
         } else if (error.response?.status && error.response.status >= 500) {
